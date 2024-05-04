@@ -5,148 +5,171 @@ import {
     BoxGeometry,
     MeshBasicMaterial,
     Mesh,
-    MeshStandardMaterial,
-    AmbientLight,
-    HemisphereLight,
-    TorusKnotGeometry,
-    HemisphereLightHelper,
+    Color,
     DirectionalLight,
-    DirectionalLightHelper,
+    AmbientLight,
     SpotLight,
+    Group,
     SpotLightHelper,
-    PlaneGeometry,
-    PointLight,
-    PointLightHelper,
-    PMREMGenerator,
-    BasicShadowMap,
-    PCFSoftShadowMap,
-    CameraHelper,
+    EquirectangularReflectionMapping,
+    RepeatWrapping,
+    AnimationMixer,
+    Clock,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
+import { gsap } from 'gsap';
 
 import Stats from 'stats.js';
+import resources from './Resources';
+
+const CONFIG = {
+    dark: {
+        ambientLightIntensity: 5,
+        background: 0x02040a,
+        envMapIntensity: 1,
+        spotLightIntensity: 0,
+    },
+    light: {
+        ambientLightIntensity: 0,
+        background: 0xfd4c9ab,
+        envMapIntensity: 0.13,
+        spotLightIntensity: 400,
+    },
+};
 
 export default class App {
     constructor() {
+        this._version = 'light';
+        this._parent = new Group();
+
         this._init();
     }
 
-    _init() {
+    async _init() {
         // RENDERER
         this._gl = new WebGLRenderer({
             canvas: document.querySelector('#canvas'),
         });
-
-        this._gl.shadowMap.enabled = true;
-        this._gl.shadowMap.type = PCFSoftShadowMap;
 
         this._gl.setSize(window.innerWidth, window.innerHeight);
 
         // CAMERA
         const aspect = window.innerWidth / window.innerHeight;
         this._camera = new PerspectiveCamera(60, aspect, 1, 100);
+        this._camera.position.x = 1;
+        this._camera.position.y = 2;
         this._camera.position.z = 5;
+        this._camera.lookAt(4, 2, -6);
 
         // SCENE
         this._scene = new Scene();
 
-        // OBJECT
-        this._initMesh();
-
-        // LIGHTS
-        this._initLights();
+        // CLOCK
+        this._clock = new Clock();
 
         // CONTROLS
-        const controls = new OrbitControls(this._camera, this._gl.domElement);
+        // const controls = new OrbitControls(this._camera, this._gl.domElement);
 
         // STATS
         this._stats = new Stats();
         document.body.appendChild(this._stats.dom);
+
+        // LOAD
+        this._load();
 
         this._animate();
 
         this._initEvents();
     }
 
-    _initMesh() {
-        const cubeGeometry = new TorusKnotGeometry(1, 0.35, 100);
-        const cubeMaterial = new MeshStandardMaterial({
-            metalness: 0.4,
-            roughness: 1,
-        });
-        const cubeMesh = new Mesh(cubeGeometry, cubeMaterial);
-        cubeMesh.castShadow = true;
-        this._torus = cubeMesh;
-        this._scene.add(cubeMesh);
+    async _load() {
+        await resources.load();
 
-        const floorGeometry = new PlaneGeometry(1, 1);
-        const floorMaterial = new MeshStandardMaterial();
-        const floorMesh = new Mesh(floorGeometry, floorMaterial);
-        floorMesh.receiveShadow = true;
+        // INIT SCENE
+        this._initScene();
 
-        floorMesh.scale.set(20, 20, 1);
-        floorMesh.position.y = -2;
-        floorMesh.rotation.x = -Math.PI * 0.5;
-        this._scene.add(floorMesh);
+        // INIT LIGHTS
+        this._initLights();
+    }
+
+    _initScene() {
+        // SCENE // ENVMAP
+        this._scene.background = new Color('#0A0A0A');
+        const envmap = resources.get('envmap');
+        envmap.mapping = EquirectangularReflectionMapping;
+        this._scene.environment = envmap;
+
+        // Deadpool
+        const dp = resources.get('dp');
+        this._parent.add(dp.scene);
+        dp.scene.scale.set(2, 2, 2);
+        dp.scene.rotation.y = -Math.PI / 2;
+        console.log(dp.scene);
+
+        this.mixer = new AnimationMixer( dp.scene );
+        const clips = dp.animations;
+        console.log(clips);
+
+        // Update the mixer on each frame
+        // function update () {
+        //     mixer.update( deltaSeconds );
+        // }
+
+        // Play a specific animation
+        // const clip = AnimationClip.findByName( clips, clips[0].name );
+        //         // const action = this.mixer.clipAction( clip );
+        //         // action.play();
+
+        const action = this.mixer.clipAction( clips[0] );
+        action.play();
+
+        // Play all animations
+        // clips.forEach( function ( clip ) {
+        //     this.mixer.clipAction( clip ).play();
+        //     console.log(  clip );
+        // } );
+
+
+        this._scene.add(this._parent);
+
     }
 
     _initLights() {
         // AMBIENT
-        const al = new AmbientLight('white', 0.4);
-        //this._scene.add(al)
+        const al = new AmbientLight(0xfefefe);
+        al.intensity = 5;
+        this._al = al;
+        this._scene.add(al);
 
-        // HEMISPEHRE
-        const hl = new HemisphereLight(0xff0000, 0x1fbeca, 0.1);
-        const hlh = new HemisphereLightHelper(hl);
-        //this._scene.add(hl, hlh)
+        // SPORTLIGHT
+        const sl = new SpotLight();
+        sl.intensity = 5;
+        sl.position.set(3, 9, 3);
+        this._sl = sl;
+        //const slh = new SpotLightHelper(sl)
+        this._scene.add(sl);
+    }
 
-        // DIRECTIONAL
-        const dl = new DirectionalLight(0xffffff, 1.7);
-        dl.color.set('#1fbeca');
-        dl.position.y = 2;
-        dl.position.z = 5;
-        dl.castShadow = true;
-        const dlh = new DirectionalLightHelper(dl);
+    changeVersion() {
+        this._version = this._version === 'light' ? 'dark' : 'light';
+        //this._scene.background = new Color(CONFIG[this._version].background)
 
-        dl.shadow.mapSize.set(256, 256);
-        dl.shadow.camera.top = 2.2;
-        dl.shadow.camera.left = -2.2;
-        dl.shadow.camera.right = 2.2;
-        dl.shadow.camera.bottom = -2.2;
-        dl.shadow.camera.far = 20;
-        const dlsh = new CameraHelper(dl.shadow.camera);
+        const config = CONFIG[this._version];
 
-        this._dl = dl;
-        this._scene.add(dl, dlh, dlsh);
+        // BACKGROUND
+        const color = new Color(config.background);
+        gsap.to(this._scene.background, { r: color.r, b: color.b, g: color.g });
 
-        // SPOTLIGHT
-        const sl = new SpotLight(0xff0000);
-        sl.intensity = 50;
-        sl.position.y = 4.5;
-        sl.position.z = 0.0;
-        sl.angle = 0.9;
-        sl.penumbra = 0.3;
-        sl.distance = 10;
-        sl.castShadow = true;
-        const slh = new SpotLightHelper(sl);
-        //this._scene.add(sl, slh);
-
-        // POINT LIGHT
-        const pl = new PointLight(0x1fbeca, 3);
-        pl.position.set(-3, 1, 1);
-        const plh = new PointLightHelper(pl);
-        //this._scene.add(pl, plh);
+        // LIGHTS
+        gsap.to(this._al, { intensity: config.ambientLightIntensity });
+        gsap.to(this._sl, { intensity: config.spotLightIntensity });
 
         // ENVMAP
-        const rgbeLoader = new RGBELoader();
-        const pmrem = new PMREMGenerator(this._gl);
-        pmrem.compileEquirectangularShader();
-
-        console.log(rgbeLoader.load);
-        rgbeLoader.load('/envmap.hdr', (texture) => {
-            const envmap = pmrem.fromEquirectangular(texture);
-            //this._scene.environment = envmap.texture
+        this._scene.traverse((el) => {
+            if (el.isMesh && el.material.envMapIntensity) {
+                const { material } = el;
+                gsap.to(material, { envMapIntensity: config.envMapIntensity });
+            }
         });
     }
 
@@ -164,10 +187,16 @@ export default class App {
 
     _animate() {
         this._stats.begin();
-        this._torus.rotation.y += 0.01;
-        this._gl.render(this._scene, this._camera);
-        this._stats.end();
+        this._clock.delta = this._clock.getDelta();
 
+        this._parent.position.y = Math.cos(this._clock.elapsedTime) * 0.1;
+        if (this.mixer){
+            this.mixer.update( this._clock.delta );
+        }
+
+        this._gl.render(this._scene, this._camera);
+
+        this._stats.end();
         window.requestAnimationFrame(this._animate.bind(this));
     }
 }
