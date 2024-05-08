@@ -29,19 +29,19 @@ export default class Postprocessing {
 
         // EFFECTPASS
         const cae = new ChromaticAberrationEffect({
-            offset: new Vector2(0.005, 0.005),
+            offset: new Vector2(0.05, 0.05),
         });
         this._cae = cae;
 
         const sepiaEffect = new SepiaEffect();
-        const pixelatedEffect = new PixelationEffect(10);
+        const pixelatedEffect = new PixelationEffect(1);
         this._pe = pixelatedEffect;
         const scanlineEffect = new ScanlineEffect({
-            density: 0.01,
+            density: 0.1,
             scrollSpeed: 0.2,
         });
 
-        const effectPass = new EffectPass(this._camera, scanlineEffect);
+        const effectPass = new EffectPass(this._camera);
 
         // ADD PASSES
         composer.addPass(rp);

@@ -4,6 +4,7 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const ASSETS = [
     { key: 'dp', type: 'gltf', path: '/quinn_character_golf.glb' },
+    { key: 'forest', type: 'gltf', path: '/low_poly_birch_tree_scene.glb' },
     { key: 'envmap', type: 'envmap', path: '/envmap.hdr' },
 ];
 
