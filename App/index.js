@@ -2,8 +2,11 @@ import {
     PerspectiveCamera,
     WebGLRenderer,
     Scene,
+    PlaneGeometry,
+    CameraHelper,
     BoxGeometry,
     MeshBasicMaterial,
+    MeshStandardMaterial,
     Mesh,
     Color,
     DirectionalLight,
@@ -15,12 +18,14 @@ import {
     RepeatWrapping,
     AnimationMixer,
     Clock,
+    Vector2, PCFSoftShadowMap, ShaderLib as light, SphereGeometry,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gsap } from 'gsap';
 
 import Stats from 'stats.js';
 import resources from './Resources';
+import Composer from './Postprocessing';
 
 const CONFIG = {
     dark: {
@@ -67,6 +72,12 @@ export default class App {
         // CLOCK
         this._clock = new Clock();
 
+        // COMPOSER
+        this._initComposer();
+
+        // MOUSE
+        this._mouse = new Vector2();
+
         // CONTROLS
         // const controls = new OrbitControls(this._camera, this._gl.domElement);
 
@@ -90,6 +101,16 @@ export default class App {
 
         // INIT LIGHTS
         this._initLights();
+
+
+    }
+
+    _initComposer() {
+        this._composer = new Composer({
+            gl: this._gl,
+            scene: this._scene,
+            camera: this._camera,
+        });
     }
 
     _initScene() {
@@ -101,10 +122,15 @@ export default class App {
 
         // Deadpool
         const dp = resources.get('dp');
+        dp.castShadow = true;
         this._parent.add(dp.scene);
         dp.scene.scale.set(2, 2, 2);
         dp.scene.rotation.y = -Math.PI / 2;
         console.log(dp.scene);
+
+        dp.castShadow = true;
+
+
 
         this.mixer = new AnimationMixer( dp.scene );
         const clips = dp.animations;
@@ -129,6 +155,24 @@ export default class App {
         //     console.log(  clip );
         // } );
 
+        const sphereGeometry = new SphereGeometry( 0.9, 32, 32 );
+        const sphereMaterial = new MeshStandardMaterial( { color: 0xff0000 } );
+        const sphere = new Mesh( sphereGeometry, sphereMaterial );
+        sphere.position.y = 7;
+        sphere.castShadow = true; //default is false
+        sphere.receiveShadow = false; //default
+        this._parent.add(sphere);
+        this._scene.add( sphere );
+
+        const planeGeometry = new PlaneGeometry( 20, 20, 32, 32 );
+        const planeMaterial = new MeshStandardMaterial( { color: 0x999999 } )
+        const plane = new Mesh( planeGeometry, planeMaterial );
+        plane.position.y = -0.1;
+        plane.rotation.x = -Math.PI / 2;
+        plane.receiveShadow = true;
+        this._scene.add( plane );
+        this._parent.add(plane);
+
 
         this._scene.add(this._parent);
 
@@ -148,6 +192,25 @@ export default class App {
         this._sl = sl;
         //const slh = new SpotLightHelper(sl)
         this._scene.add(sl);
+
+        this._gl.shadowMap.enabled = true;
+        this._gl.shadowMap.type = PCFSoftShadowMap; // default THREE.PCFShadowMap
+
+//Create a DirectionalLight and turn on shadows for the light
+        const light = new DirectionalLight( 0xffffff, 1 );
+        light.position.set( 0, 10, 0 ); //default; light shining from top
+        light.castShadow = true; // default false
+        this._scene.add( light );
+
+//Set up shadow properties for the light
+        light.shadow.mapSize.width = 512; // default
+        light.shadow.mapSize.height = 512; // default
+        light.shadow.camera.near = 0.5; // default
+        light.shadow.camera.far = 500; // default
+
+        // const helper = new CameraHelper( light.shadow.camera );
+        // this._scene.add( helper );
+
     }
 
     changeVersion() {
@@ -177,6 +240,14 @@ export default class App {
         window.addEventListener('resize', this._resize.bind(this));
     }
 
+    onMouseMove(e) {
+        this._mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        this._mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        this._composer.updateChromaticIntensity(this._mouse.x, this._mouse.y);
+        this._composer.updatePixelationSize(this._mouse.x, this._mouse.y);
+    }
+
     _resize() {
         this._gl.setSize(window.innerWidth, window.innerHeight);
 
@@ -194,9 +265,11 @@ export default class App {
             this.mixer.update( this._clock.delta );
         }
 
-        this._gl.render(this._scene, this._camera);
+        // this._gl.render(this._scene, this._camera);
+        this._composer.render();
 
         this._stats.end();
         window.requestAnimationFrame(this._animate.bind(this));
     }
+
 }
