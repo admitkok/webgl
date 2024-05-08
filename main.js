@@ -7,4 +7,3 @@ const button = document.querySelector('.button');
 button.addEventListener('click', () => {
     app.changeVersion();
 });
-window.addEventListener('pointermove', e => app.onMouseMove(e))
