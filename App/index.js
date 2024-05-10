@@ -1,42 +1,31 @@
 import {
-    PerspectiveCamera,
-    WebGLRenderer,
-    Scene,
-    PlaneGeometry,
-    CameraHelper,
-    BoxGeometry,
-    MeshBasicMaterial,
-    MeshStandardMaterial,
-    Mesh,
+    AmbientLight,
+    AnimationMixer,
+    CircleGeometry,
+    Clock,
     Color,
     DirectionalLight,
-    AmbientLight,
-    SpotLight,
-    Group,
-    SpotLightHelper,
     EquirectangularReflectionMapping,
-    RepeatWrapping,
-    AnimationMixer,
-    Clock,
-    Vector2,
+    Group,
+    MathUtils,
+    Mesh,
+    MeshStandardMaterial,
     PCFSoftShadowMap,
+    PerspectiveCamera,
+    Scene,
     ShaderLib as light,
     SphereGeometry,
-    SkeletonHelper,
-    MathUtils,
-    AxesHelper,
-    CircleGeometry, BoxHelper, PlaneHelper,
+    SpotLight,
+    Vector2,
+    WebGLRenderer,
 } from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { gsap } from 'gsap';
+import {gsap} from 'gsap';
 
 import Stats from 'stats.js';
 import resources from './Resources';
 import Composer from './Postprocessing';
 import Tiles from './Tiles';
 import HolographicMaterial from "../HolographicMaterialVanilla.js";
-import {element} from "three/nodes";
-import {VertexNormalsHelper} from "three/examples/jsm/helpers/VertexNormalsHelper.js";
 
 const CONFIG = {
     dark: {
@@ -140,18 +129,16 @@ export default class App {
         const dp = resources.get('dp');
         dp.castShadow = true;
         this._parent.add(dp.scene);
-        const holographicMaterial = new HolographicMaterial();
-        dp.scene.material = holographicMaterial;
         dp.scene.scale.set(2, 2, 2);
         dp.scene.rotation.y = -Math.PI / 2;
-        console.log(dp.scene);
-
+        const hologramMaterial = new HolographicMaterial();
 
 
         dp.scene.traverse(el => {
             if(el.isMesh){
                 el.castShadow = true;
                 el.receiveShadow = true;
+                el.material = hologramMaterial;
             }
         })
 
@@ -182,7 +169,6 @@ export default class App {
 
         this.mixer = new AnimationMixer( dp.scene );
         const clips = dp.animations;
-        console.log(clips);
 
         // Update the mixer on each frame
         // function update () {
@@ -205,7 +191,7 @@ export default class App {
 
 
         const circleGeometry = new CircleGeometry( 3, 30 );
-        const planeMaterial = new MeshStandardMaterial( { color: 0x000000, wireframe: true } )
+        const planeMaterial = new MeshStandardMaterial( { color: 0x5599ff, wireframe: true } )
         const circleMaterial = new MeshStandardMaterial( { color: 0x119900 , wireframe: true } )
         const planeGeometry = new CircleGeometry( 20, 20 );
         const plane = new Mesh( planeGeometry, planeMaterial );
@@ -219,6 +205,13 @@ export default class App {
         this._parent.add(plane);
         // const helper = new PlaneHelper( plane, 1, 0xff0000 );
         // this._scene.add(helper);
+        const sphereMaterial = hologramMaterial
+        const sphereGeometry = new SphereGeometry( 0.07, 20 );
+        const sphere = new Mesh( sphereGeometry, sphereMaterial );
+        this._scene.add(sphere);
+        sphere.position.y = -0.1;
+        sphere.position.z = 0.7;
+
 
 
 
@@ -318,12 +311,16 @@ export default class App {
         this._stats.begin();
         this._clock.delta = this._clock.getDelta();
         this._tiles.update();
+       //  const tick = () => {
+       //      this._scene.sphere.material.update() // Update the holographic material time uniform
+       //      window.requestAnimationFrame(tick)
+       //  }
+       // tick();
 
-        // this.hol.update(); // Update the holographic material time uniform
+        // hologramMaterial.update(); // Update the holographic material time uniform
 
         if (this._clock.elapsedTime < 1.5) {
             this._tiles.rotation.y +=  0.05 - this._clock.elapsedTime / 30;
-            console.log(this._tiles.rotation.y);
         }
         else{
             this._tiles.rotation.y += this._clock.delta * 0.05;
