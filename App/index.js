@@ -1,4 +1,14 @@
 import {
+    PerspectiveCamera,
+    WebGLRenderer,
+    Scene,
+    BoxGeometry,
+    MeshBasicMaterial,
+    Mesh,
+    PlaneGeometry,
+    ShaderMaterial,
+    BufferAttribute,
+    Color,
     AmbientLight,
     AnimationMixer,
     CircleGeometry,
@@ -18,7 +28,11 @@ import {
     SpotLight,
     Vector2,
     WebGLRenderer,
+    SphereGeometry,
+    IcosahedronGeometry,
+    Vector3, MathUtils, MeshStandardMaterial, AmbientLight,
 } from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {gsap} from 'gsap';
 
 import Stats from 'stats.js';
@@ -27,20 +41,11 @@ import Composer from './Postprocessing';
 import Tiles from './Tiles';
 import HolographicMaterial from "../HolographicMaterialVanilla.js";
 
-const CONFIG = {
-    dark: {
-        ambientLightIntensity: 5,
-        background: 0x02040a,
-        envMapIntensity: 1,
-        spotLightIntensity: 0,
-    },
-    light: {
-        ambientLightIntensity: 0,
-        background: 0xfd4c9ab,
-        envMapIntensity: 0.13,
-        spotLightIntensity: 400,
-    },
-};
+import vertex from './shaders/index.vert';
+import fragment from './shaders/index.frag';
+import {World, Sphere, Body, Vec3, Plane } from "cannon-es";
+import {random} from "gsap/gsap-core";
+import {element} from "three/nodes";
 
 export default class App {
     constructor() {
@@ -51,7 +56,7 @@ export default class App {
         this._init();
     }
 
-    async _init() {
+    _init() {
         // RENDERER
         this._gl = new WebGLRenderer({
             canvas: document.querySelector('#canvas'),
@@ -67,12 +72,40 @@ export default class App {
         this._camera.position.y = 2;
         this._camera.position.z = 5;
         this._camera.lookAt(4, 2, -6);
+        this._camera = new PerspectiveCamera(60, aspect, 0.1, 50);
+        this._camera.position.z = 10;
 
         // SCENE
         this._scene = new Scene();
 
+        this._world = new World();
+        this._world.gravity.set(0, -100, 0);  // No gravity in any direction
+
+
         // CLOCK
         this._clock = new Clock();
+
+        const elements = []
+        this.icos = []
+
+        // INIT PLANE
+        elements.push(this._initPlane());
+
+
+        // INIT PLANE
+        // this._initAttribute();
+
+        this._initLights()
+
+        // ICOSAEDRON
+
+        for (let i = 0; i < 20; i++) {
+            const el = this._initIcosahedron();
+            elements.push(el)
+        }
+
+        this._elements = elements
+
 
         // COMPOSER
         this._initComposer();
@@ -81,26 +114,29 @@ export default class App {
         this._mouse = new Vector2();
 
         // CONTROLS
-        // const controls = new OrbitControls(this._camera, this._gl.domElement);
+        const controls = new OrbitControls(this._camera, this._gl.domElement);
 
         // STATS
         this._stats = new Stats();
         document.body.appendChild(this._stats.dom);
-
-        // LOAD
-        this._load();
 
         this._animate();
 
         this._initEvents();
     }
 
-    async _load() {
-        await resources.load();
+    _initPlane() {
+        const g = new PlaneGeometry(20, 20);
+        const m = new MeshStandardMaterial();
+        const mesh = new Mesh(g, m);
 
-        // INIT SCENE
-        this._initScene();
+        this._scene.add(mesh);
 
+        const shape = new Plane();
+        const plane = new Body({mass: 0});
+        plane.addShape(shape);
+        plane.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
+        this._world.addBody(plane);
         // INIT LIGHTS
         this._initLights();
 
@@ -115,13 +151,12 @@ export default class App {
         });
     }
 
-    _initScene() {
-        // SCENE // ENVMAP
-        this._scene.background = new Color('#0A0A0A');
-        const envmap = resources.get('envmap');
-        envmap.mapping = EquirectangularReflectionMapping;
-        this._scene.environment = envmap;
+        // bind mesh body
+        mesh.userData.body = plane
+        this._test = mesh
 
+        this._test.rotation.x = -Math.PI / 2;
+        this._test.position.y = -1;
         // const axesHelper = new AxesHelper( 5 );
         // this._scene.add( axesHelper );
 
@@ -167,29 +202,44 @@ export default class App {
 
 
 
+        return mesh
         this.mixer = new AnimationMixer( dp.scene );
         const clips = dp.animations;
 
-        // Update the mixer on each frame
-        // function update () {
-        //     mixer.update( deltaSeconds );
-        // }
 
-        // Play a specific animation
-        // const clip = AnimationClip.findByName( clips, clips[0].name );
-        //         // const action = this.mixer.clipAction( clip );
-        //         // action.play();
+    }
 
-        const action = this.mixer.clipAction( clips[0] );
-        action.play();
+    _initIcosahedron() {
+        const g = new IcosahedronGeometry(0.3, 40);
+        const m = new ShaderMaterial({
+            vertexShader: vertex,
+            fragmentShader: fragment,
+            uniforms: {
+                uTime: { value: 0 },
+                uColorA: { value: new Color(0x00ffee) },
+                uColorB: { value: new Color(0xff52ff) },
+                uMouse: { value: new Vector3(0, 0, 0) },
+            },
+        });
 
-        // Play all animations
-        // clips.forEach( function ( clip ) {
-        //     this.mixer.clipAction( clip ).play();
-        //     console.log(  clip );
-        // } );
+        const mesh = new Mesh(g, m);
+        this._ico = mesh;
+        this.icos.push(this._ico)
+        this._scene.add(mesh);
 
 
+        const shape = new Sphere(0.3);
+        const body = new Body({
+            mass: 0.1,
+            type: Body.DYNAMIC,
+            position: new Vec3(
+                MathUtils.randFloat(-7, 7),
+                1,
+                MathUtils.randFloat(-7, 7),
+            ),
+            shape: shape
+        });
+        this._world.addBody(body);
         const circleGeometry = new CircleGeometry( 3, 30 );
         const planeMaterial = new MeshStandardMaterial( { color: 0x5599ff, wireframe: true } )
         const circleMaterial = new MeshStandardMaterial( { color: 0x119900 , wireframe: true } )
@@ -218,6 +268,16 @@ export default class App {
 
         this._scene.add(this._parent);
 
+        // bind mesh body
+        mesh.userData.body = body
+        this._test = mesh
+
+        return mesh
+    }
+
+    _initEvents() {
+        window.addEventListener('resize', this._resize.bind(this));
+        window.addEventListener('mousemove', this._onMouseMove.bind(this));
 
     }
 
@@ -226,10 +286,11 @@ export default class App {
     }
 
     _initLights() {
-        // AMBIENT
+        // // AMBIENT
         const al = new AmbientLight(0xfefefe);
-        al.intensity = 5;
+        al.intensity = 50;
         this._al = al;
+        this._scene.add(al);
         // this._scene.add(al);
 
         // SPORTLIGHT
@@ -283,8 +344,13 @@ export default class App {
         });
     }
 
-    _initEvents() {
-        window.addEventListener('resize', this._resize.bind(this));
+    _onMouseMove(e) {
+        this._elements.forEach(el => {
+            const x = (e.clientX / window.innerWidth) * 2 - 1;
+            const y = -(e.clientY / window.innerHeight) * 2 + 1;
+            const force = new Vec3(x * 20,0, -20*y)
+            el.userData.body.applyForce(force, new Vec3(0, 0.2, 0))
+        })
     }
 
     // onMouseMove(e) {
@@ -307,9 +373,24 @@ export default class App {
         this._camera.updateProjectionMatrix();
     }
 
+
+
     _animate() {
         this._stats.begin();
         this._clock.delta = this._clock.getDelta();
+        this._world.step( this._clock.delta );
+
+
+        //this._test.position.copy(this._test.userData.body.position)
+
+        this._elements.forEach(el => {
+            el.position.copy(el.userData.body.position)
+            const centerForce = new Vec3(-1*el.position.x ,0, -1*el.position.z)
+            el.userData.body.applyForce(centerForce)
+        })
+
+
+
         this._tiles.update();
        //  const tick = () => {
        //      this._scene.sphere.material.update() // Update the holographic material time uniform
@@ -331,10 +412,26 @@ export default class App {
         if (this.mixer){
             this.mixer.update( this._clock.delta );
         }
+        // SPHERE
+        /*this._mesh.material.uniforms.uIntensity.value = Math.tan(
+          this._clock.elapsedTime
+        );
+
+        this._mesh.material.uniforms.uTime.value = this._clock.elapsedTime;
+        */
+        console.log(this.icos)
+        // ICO
+        this.icos.forEach(el => {
+           el.material.uniforms.uTime.value = this._clock.elapsedTime;
+
+        })
+
+
 
         // this._gl.render(this._scene, this._camera);
         this._composer.render();
 
+        this._gl.render(this._scene, this._camera);
         this._stats.end();
         window.requestAnimationFrame(this._animate.bind(this));
     }

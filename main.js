@@ -4,10 +4,6 @@ import App from './App';
 
 const app = new App();
 
-// const button = document.querySelector('.button');
-// button.addEventListener('click', () => {
-//     app.changeVersion();
-// });
 
 const el = document.querySelector('#canvas');
 const gesture = new DragGesture(el, (state) => {
