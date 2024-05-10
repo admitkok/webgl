@@ -22,8 +22,8 @@ void main(){
   // SECOND DISPLACEMENT
   float noise2 = snoise(vec3(
     5.0 * newPosition.x + uTime * 5.0,
-    newPosition.y,
-    newPosition.z
+    newPosition.y * 5.0,
+    newPosition.z * 5.0
   ));
 
 
