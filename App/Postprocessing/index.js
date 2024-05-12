@@ -41,7 +41,7 @@ export default class Postprocessing {
             scrollSpeed: 0.2,
         });
 
-        const effectPass = new EffectPass(this._camera);
+        const effectPass = new EffectPass(this._camera, scanlineEffect);
 
         // ADD PASSES
         composer.addPass(rp);

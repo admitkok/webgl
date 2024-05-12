@@ -4,9 +4,11 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const ASSETS = [
     { key: 'dp', type: 'gltf', path: '/quinn_character_golf.glb' },
-    { key: 'forest', type: 'gltf', path: '/low_poly_birch_tree_scene.glb' },
-    { key: 'envmap', type: 'envmap', path: '/envmap.hdr' },
+    { key: 'envmap', type: 'envmap', path: '/envmap.hdr' }
 ];
+
+
+
 
 class Resources {
     constructor() {
@@ -24,6 +26,7 @@ class Resources {
     }
 
     async load() {
+        console.log(this._resouces)
         const promises = ASSETS.map((el) => {
             // GTLF
             let prom;
@@ -32,6 +35,7 @@ class Resources {
                     this._loaders.gltf.load(el.path, (model) => {
                         this._resouces.set(el.key, model);
                         res();
+                        console.log('reso');
                     });
                 });
             }
@@ -92,5 +96,5 @@ class Resources {
     }
 }
 
-const resources = new Resources();
-export default resources;
+const resouces = new Resources();
+export default resouces;
