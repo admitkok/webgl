@@ -35,7 +35,7 @@ import HolographicMaterial from "../HolographicMaterialVanilla.js";
 
 import vertex from './shaders/index.vert';
 import fragment from './shaders/index.frag';
-import {World, Sphere, Body, Vec3, Plane } from "cannon-es";
+import {World, Sphere, Body, Vec3, Plane, Box } from "cannon-es";
 import {random} from "gsap/gsap-core";
 import {element} from "three/nodes";
 import {PI} from "three/examples/jsm/nodes/math/MathNode.js";
@@ -297,8 +297,8 @@ export default class App {
         })
 
         const tiles = new Tiles();
-        const tiles1 = new Tiles1();
         this._tiles = tiles;
+        const tiles1 = new Tiles1();
         this._tiles1 = tiles1;
         this._scene.add(tiles);
         this._scene.add(tiles1);
@@ -359,9 +359,9 @@ export default class App {
             mass: MathUtils.randFloat(0.1, 1),
             type: Body.DYNAMIC,
             position: new Vec3(
-                MathUtils.randFloat(-19, 4),
+                MathUtils.randFloat(-50, -20),
                 MathUtils.randFloat(2, 5),
-                MathUtils.randFloat(-19, 4),
+                MathUtils.randFloat(50, 18),
             ),
             shape: shape
         });
@@ -551,6 +551,7 @@ export default class App {
 
         this._gl.render(this._scene, this._camera);
         // this._composer.render();
+
 
 
 

@@ -20,7 +20,7 @@ export default class Tiles extends Group {
         super();
 
         this._isDragging = false;
-        this._width = 100;
+        this._width = 50;
         this._dragSpeed = {
             prev: 0,
             current: 0,
@@ -33,8 +33,8 @@ export default class Tiles extends Group {
 
     _init() {
 
-        const geometry = new PlaneGeometry(0.5, 0.5, 1, 1);
-        for (let i = 4; i < 9; i++) {
+        const geometry = new PlaneGeometry(0.15, 0.15, 1, 1);
+        for (let i = 4; i < 10; i++) {
             // LOAD MAP
             const map = resources.get(`t-${i}`);
             map.colorSpace = SRGBColorSpace;
@@ -74,13 +74,13 @@ export default class Tiles extends Group {
             // mesh.position.x = this._width * i * 1.4 + MathUtils.randFloat(60, 80);
             // mesh.position.y = MathUtils.randFloat(-30, 30);
             // mesh.position.z = MathUtils.randFloat(-20, 20);
-            mesh.position.x =  1 * this._width * Math.cos(2 * i * Math.PI / 10);
-            mesh.position.y = 30;
-            mesh.position.z =  1 * this._width * Math.sin(2 * i * Math.PI / 10);
+            mesh.position.x =  0.3 * this._width * Math.cos(2 * i * Math.PI / 6);
+            mesh.position.y = 7;
+            mesh.position.z =  0.3 * this._width * Math.sin(2 * i * Math.PI / 6);
             mesh.userData.destinationPosition = mesh.position.clone();
             mesh.userData.initialPosition = mesh.position.clone();
 
-            mesh.rotation.y = -Math.PI / 2 - 2 * i * Math.PI / 10;
+            mesh.rotation.y = -Math.PI / 2 - 2 * i * Math.PI / 6;
 
             mesh.userData.dragPosition = mesh.position.clone();
             mesh.userData.dragPosition.z += MathUtils.randFloat(0, 1);

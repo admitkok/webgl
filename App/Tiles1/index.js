@@ -65,9 +65,6 @@ export default class Tiles1 extends Group {
             mesh.scale.set(meshWidth, meshHeight, 1);
 
             // X, Y, Z
-            // mesh.position.x = this._width * i * 1.4 + MathUtils.randFloat(60, 80);
-            // mesh.position.y = MathUtils.randFloat(-30, 30);
-            // mesh.position.z = MathUtils.randFloat(-20, 20);
             mesh.position.x =  9 * this._width * Math.cos(2 * i * Math.PI / 10);
             mesh.position.y = 200;
             mesh.position.z =  9 * this._width * Math.sin(2 * i * Math.PI / 10);

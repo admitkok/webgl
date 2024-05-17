@@ -12,6 +12,7 @@ const ASSETS = [
     { key: 't-6', type: 'texture', path: '/images/t-6.jpg' },
     { key: 't-7', type: 'texture', path: '/images/t-7.jpg' },
     { key: 't-8', type: 'texture', path: '/images/t-8.jpg' },
+    { key: 't-9', type: 'texture', path: '/images/t-9.jpg' },
     { key: 'dp', type: 'gltf', path: '/quinn_character_golf.glb' },
     { key: 'envmap', type: 'envmap', path: '/envmap.hdr' }
 ];
