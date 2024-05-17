@@ -500,7 +500,7 @@ export default class App {
 
         if (this._clock.elapsedTime < 1.4) {
             this._tiles.rotation.y +=  0.05 - this._clock.elapsedTime / 30;
-            this._tiles1.rotation.y -= 0.05 - this._clock.elapsedTime / 20;
+            this._tiles1.rotation.y -= 0.05 - this._clock.elapsedTime / 30;
         }
         else{
             this._tiles.rotation.y += this._clock.delta * 0.25;

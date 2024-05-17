@@ -65,13 +65,13 @@ export default class Tiles1 extends Group {
             mesh.scale.set(meshWidth, meshHeight, 1);
 
             // X, Y, Z
-            mesh.position.x =  9 * this._width * Math.cos(2 * i * Math.PI / 10);
+            mesh.position.x =  9 * this._width * Math.cos(2 * i * Math.PI / 4);
             mesh.position.y = 200;
-            mesh.position.z =  9 * this._width * Math.sin(2 * i * Math.PI / 10);
+            mesh.position.z =  9 * this._width * Math.sin(2 * i * Math.PI / 4);
             mesh.userData.destinationPosition = mesh.position.clone();
             mesh.userData.initialPosition = mesh.position.clone();
 
-            mesh.rotation.y = -Math.PI / 2 - 2 * i * Math.PI / 10;
+            mesh.rotation.y = -Math.PI / 2 - 2 * i * Math.PI / 4;
 
             mesh.userData.dragPosition = mesh.position.clone();
             mesh.userData.dragPosition.z += MathUtils.randFloat(-30, -70);
