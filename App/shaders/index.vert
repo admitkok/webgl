@@ -17,7 +17,7 @@ void main(){
     0.4 * position.z
   ));
 
-  newPosition += normal * (noise * 0.1);
+  newPosition += normal * (noise * 0.01);
 
   // SECOND DISPLACEMENT
   float noise2 = snoise(vec3(
@@ -37,8 +37,8 @@ void main(){
 
 
   //newPosition += normal * (noise2 * 0.00);
-  float firstNoiseIntensity = smoothstep(0.0, 0.7, noise);
-  newPosition += (0.1 * noise2 * normal) * intensity;
+  float firstNoiseIntensity = smoothstep(0.0, 0.1, noise);
+  newPosition += (0.01 * noise2 * normal) * intensity;
 
 
 

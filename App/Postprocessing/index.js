@@ -29,7 +29,7 @@ export default class Postprocessing {
 
         // EFFECTPASS
         const cae = new ChromaticAberrationEffect({
-            offset: new Vector2(0.05, 0.05),
+            offset: new Vector2(0.0001, 0.0001),
         });
         this._cae = cae;
 

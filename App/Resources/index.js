@@ -3,11 +3,18 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const ASSETS = [
+    { key: 't-0', type: 'texture', path: '/images/t-0.jpg' },
+    { key: 't-1', type: 'texture', path: '/images/t-1.jpg' },
+    { key: 't-2', type: 'texture', path: '/images/t-2.jpg' },
+    { key: 't-3', type: 'texture', path: '/images/t-3.jpg' },
+    { key: 't-4', type: 'texture', path: '/images/t-4.jpg' },
+    { key: 't-5', type: 'texture', path: '/images/t-5.jpg' },
+    { key: 't-6', type: 'texture', path: '/images/t-6.jpg' },
+    { key: 't-7', type: 'texture', path: '/images/t-7.jpg' },
+    { key: 't-8', type: 'texture', path: '/images/t-8.jpg' },
     { key: 'dp', type: 'gltf', path: '/quinn_character_golf.glb' },
     { key: 'envmap', type: 'envmap', path: '/envmap.hdr' }
 ];
-
-
 
 
 class Resources {
@@ -26,7 +33,6 @@ class Resources {
     }
 
     async load() {
-        console.log(this._resouces)
         const promises = ASSETS.map((el) => {
             // GTLF
             let prom;
@@ -35,7 +41,6 @@ class Resources {
                     this._loaders.gltf.load(el.path, (model) => {
                         this._resouces.set(el.key, model);
                         res();
-                        console.log('reso');
                     });
                 });
             }

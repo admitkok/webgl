@@ -11,10 +11,10 @@ vec3 cosPalette(float t,  vec3 a,  vec3 b,  vec3 c, vec3 d){
 }
 
 void main(){
-  vec3 brightness = vec3(0.2);
+  vec3 brightness = vec3(1);
   vec3 contrast = vec3(1.0);
   vec3 oscillation = vec3(1.0);
-  vec3 phase = vec3(0.4, 0.3, 0.0);
+  vec3 phase = vec3(0.0, 0.0, 0.0);
 
 
 //  vec3 finalColor = mix(uColorA, uColorB, vNoise);

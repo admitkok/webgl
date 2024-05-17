@@ -21,7 +21,7 @@ import {
     Vector2,
     WebGLRenderer,
     IcosahedronGeometry,
-    Vector3, MathUtils, MeshStandardMaterial, AmbientLight,
+    Vector3, MathUtils, MeshStandardMaterial, AmbientLight, CylinderGeometry, Object3D, WebGLRenderTarget,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {gsap} from 'gsap';
@@ -30,6 +30,7 @@ import Stats from 'stats.js';
 import resources from './Resources';
 import Composer from './Postprocessing';
 import Tiles from './Tiles';
+import Tiles1 from './Tiles1';
 import HolographicMaterial from "../HolographicMaterialVanilla.js";
 
 import vertex from './shaders/index.vert';
@@ -37,14 +38,13 @@ import fragment from './shaders/index.frag';
 import {World, Sphere, Body, Vec3, Plane } from "cannon-es";
 import {random} from "gsap/gsap-core";
 import {element} from "three/nodes";
+import {PI} from "three/examples/jsm/nodes/math/MathNode.js";
 
 
 export default class App {
     constructor() {
         this._version = 'light';
         this._parent = new Group();
-        this._tiles = new Tiles();
-
         this._init();
     }
 
@@ -63,23 +63,30 @@ export default class App {
         this._camera.position.x = 1;
         this._camera.position.y = 2;
         this._camera.position.z = 5;
-        this._camera.lookAt(5, 1, -10);
+        this._camera.lookAt(9, 1, -10);
+
         // SCENE
         this._scene = new Scene();
-
+        this._scene.background = new Color(0x000000);
 
         this._world = new World();
-        this._world.gravity.set(0, 0, 0);  // No gravity in any direction
-
+        this._world.gravity.set(0, -10, 0);  // No gravity in any direction
 
         // CLOCK
         this._clock = new Clock();
+
 
         const elements = [];
         this.icos = [];
 
         // INIT PLANE
         elements.push(this._initPlane());
+        elements.push(this._initPlane1());
+        elements.push(this._initPlane2());
+        // elements.push(this._initPlane3());
+        // elements.push(this._initPlane4());
+
+        const renderTarget = new WebGLRenderTarget(window.innerWidth, window.innerHeight);
 
 
         // INIT PLANE
@@ -87,7 +94,7 @@ export default class App {
 
         // ICOSAEDRON
 
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 100; i++) {
             const el = this._initIcosahedron();
             elements.push(el)
         }
@@ -108,7 +115,12 @@ export default class App {
         this._stats = new Stats();
         document.body.appendChild(this._stats.dom);
 
-        this._load();
+        await resources.load();
+
+        // INIT SCENE
+        this._initScene();
+        // INIT LIGHTS
+        this._initLights();
 
         this._animate();
 
@@ -116,17 +128,9 @@ export default class App {
 
     }
 
-    async _load() {
-        await resources.load();
-        // INIT SCENE
-        this._initScene();
-
-        // INIT LIGHTS
-        this._initights();
-    }
 
     _initPlane() {
-        const g = new PlaneGeometry(50, 50);
+        const g = new PlaneGeometry(50, 50, 10, 10);
         const m = new MeshStandardMaterial( { color: 0x000000, wireframe: true } );
         const mesh = new Mesh(g, m);
 
@@ -148,6 +152,115 @@ export default class App {
 
     }
 
+    _initPlane1() {
+        const g = new PlaneGeometry(50, 50, 1, 1);
+        const m = new MeshStandardMaterial( { color: 0x000000 } );
+        const mesh = new Mesh(g, m);
+
+        this._scene.add(mesh);
+
+        const shape = new Plane();
+        const plane = new Body({mass: 0});
+        plane.addShape(shape);
+        // plane.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
+        plane.position.y = 5;
+        plane.position.z = -20;
+        this._world.addBody(plane);
+
+        mesh.userData.body = plane
+        this._test1 = mesh
+
+        this._test1.position.z = -20;
+        this._test1.position.y = 5;
+        this._test1.rotation.y = -Math.PI;
+
+        return mesh;
+
+
+    }
+
+    _initPlane2() {
+        const g = new PlaneGeometry(50, 50, 1, 1);
+        const m = new MeshStandardMaterial( { color: 0x000000} );
+        const mesh = new Mesh(g, m);
+
+        this._scene.add(mesh);
+
+        const shape = new Plane();
+        const plane = new Body({mass: 0});
+        plane.addShape(shape);
+        plane.quaternion.setFromEuler(0, -Math.PI / 2, 0)
+        plane.position.y = 5;
+        plane.position.x = 20;
+        // plane.rotation.y = -Math.PI / 2;
+        this._world.addBody(plane);
+
+        mesh.userData.body = plane
+        this._test1 = mesh
+
+        this._test1.position.x = 20;
+        this._test1.position.y = 5;
+        this._test1.rotation.y = Math.PI / 2;
+
+
+        return mesh;
+
+
+    }
+
+    _initPlane3() {
+        const g = new PlaneGeometry(50, 50, 1, 1);
+        const m = new MeshStandardMaterial( { color: 0x000000 } );
+        const mesh = new Mesh(g, m);
+
+        this._scene.add(mesh);
+
+        const shape = new Plane();
+        const plane = new Body({mass: 0});
+        plane.addShape(shape);
+        plane.quaternion.setFromEuler(0, Math.PI / 2, 0)
+        plane.position.y = 5;
+        plane.position.x = -10;
+        this._world.addBody(plane);
+
+        mesh.userData.body = plane
+        this._test1 = mesh
+
+        this._test1.position.x = -10;
+        this._test1.position.y = 5;
+        this._test1.rotation.y = -Math.PI / 2;
+
+
+        return mesh;
+
+
+    }
+
+    _initPlane4() {
+        const g = new PlaneGeometry(50, 50, 1, 1);
+        const m = new MeshStandardMaterial( { color: 0x000fff} );
+        const mesh = new Mesh(g, m);
+
+        this._scene.add(mesh);
+
+        const shape = new Plane();
+        const plane = new Body({mass: 0});
+        plane.addShape(shape);
+        plane.quaternion.setFromEuler( 0 , 0, 0)
+        plane.position.z = 20;
+        this._world.addBody(plane);
+
+        mesh.userData.body = plane
+        this._test2 = mesh
+
+        this._test2.position.z = 20;
+
+
+        return mesh;
+
+    }
+
+
     _initComposer() {
         this._composer = new Composer({
             gl: this._gl,
@@ -157,7 +270,6 @@ export default class App {
     }
 
     _initScene() {
-
         // bind mesh body
 
         // const axesHelper = new AxesHelper( 5 );
@@ -185,15 +297,39 @@ export default class App {
         })
 
         const tiles = new Tiles();
+        const tiles1 = new Tiles1();
         this._tiles = tiles;
+        this._tiles1 = tiles1;
         this._scene.add(tiles);
-        this._parent.add(tiles.scene);
+        this._scene.add(tiles1);
+        this._tiles.rotation.y = -Math.PI;
 
 
         this.mixer = new AnimationMixer( dp.scene );
         const clips = dp.animations;
         const action = this.mixer.clipAction( clips[0] );
         action.play();
+        this._scene.add(this._parent);
+
+        const circleGeometry = new CircleGeometry( 3, 90);
+        const circleMaterial = new MeshStandardMaterial( { color: 0x119900 , wireframe: true } )
+        const planeGeometry = new SphereGeometry( 0.1, 30 );
+        const plane = new Mesh( planeGeometry, hologramMaterial );
+        const circle = new Mesh( circleGeometry, circleMaterial );
+        const cilinder = new CylinderGeometry( 0.07, 0.05, 0.1, 3 );
+        const cylinderMesh = new Mesh( cilinder, hologramMaterial );
+        plane.position.y = 0.1;
+        plane.position.z = 1;
+        plane.rotation.x = -Math.PI / 2;
+        circle.rotation.x = -Math.PI / 2;
+       cylinderMesh.position.z = 1;
+        this._scene.add( circle );
+        this._parent.add( circle );
+        this._scene.add( plane );
+        this._parent.add(plane);
+        this._scene.add(cylinderMesh);
+        this._parent.add(cylinderMesh);
+
         this._scene.add(this._parent);
 
 
@@ -220,31 +356,17 @@ export default class App {
 
         const shape = new Sphere(0.1);
         const body = new Body({
-            mass: 0.1,
+            mass: MathUtils.randFloat(0.1, 1),
             type: Body.DYNAMIC,
             position: new Vec3(
-                MathUtils.randFloat(-15, 15),
-                1,
-                MathUtils.randFloat(-15, 15),
+                MathUtils.randFloat(-19, 4),
+                MathUtils.randFloat(2, 5),
+                MathUtils.randFloat(-19, 4),
             ),
             shape: shape
         });
         this._world.addBody(body);
-        const circleGeometry = new CircleGeometry( 3, 30 );
-        const planeMaterial = new MeshStandardMaterial( { color: 0x5599ff, wireframe: true } )
-        const circleMaterial = new MeshStandardMaterial( { color: 0x119900 , wireframe: true } )
-        const planeGeometry = new CircleGeometry( 20, 20 );
-        const plane = new Mesh( planeGeometry, planeMaterial );
-        const circle = new Mesh( circleGeometry, circleMaterial );
-        plane.position.y = -0.1;
-        plane.rotation.x = -Math.PI / 2;
-        circle.rotation.x = -Math.PI / 2;
-        plane.receiveShadow = true;
-        this._scene.add( circle );
-        this._scene.add( plane );
-        this._parent.add(plane);
 
-        this._scene.add(this._parent);
 
         // bind mesh body
         mesh.userData.body = body
@@ -261,6 +383,7 @@ export default class App {
 
     onDrag(e, delta) {
         this._tiles.onDrag(e, delta);
+        this._tiles1.onDrag(e, -delta);
     }
 
     _initLights() {
@@ -323,8 +446,8 @@ export default class App {
         this._elements.forEach(el => {
             const x = (e.clientX / window.innerWidth) * 2 - 1;
             const y = -(e.clientY / window.innerHeight) * 2 + 1;
-            const force = new Vec3(x * 20,10, -20*y)
-            el.userData.body.applyForce(force, new Vec3(0, 10, 0))
+            const force = new Vec3(x * 20,0, -20*y)
+            el.userData.body.applyForce(force, new Vec3(0, 0, 0))
         })
     }
 
@@ -353,41 +476,45 @@ export default class App {
     _animate() {
         this._stats.begin();
         this._clock.delta = this._clock.getDelta();
-        this._world.step( this._clock.delta / 10 );
-
+        this._world.step( this._clock.delta  );
 
 
         //this._test.position.copy(this._test.userData.body.position)
+        // this._elements[1].rotation.x += this._clock.elapsedTime * 0.001;
 
         this._elements.forEach(el => {
             el.position.copy(el.userData.body.position)
-            const centerForce = new Vec3(-10*el.position.x ,-10*el.position.y, -10*el.position.z)
-            el.userData.body.applyForce(centerForce)
+            const centerForce = new Vec3(-10 * el.position.x, -1 * el.position.y, -10 * el.position.z)
+            if(el.position.x < -20 || el.position.z > 20) {
+                el.userData.body.applyForce(centerForce)
+            }
         })
 
 
 
         this._tiles.update();
-       //  const tick = () => {
-       //      this._scene.sphere.material.update() // Update the holographic material time uniform
-       //      window.requestAnimationFrame(tick)
-       //  }
-       // tick();
+        this._tiles1.update();
+
 
         // hologramMaterial.update(); // Update the holographic material time uniform
 
-        if (this._clock.elapsedTime < 1.5) {
+        if (this._clock.elapsedTime < 1.4) {
             this._tiles.rotation.y +=  0.05 - this._clock.elapsedTime / 30;
+            this._tiles1.rotation.y -= 0.05 - this._clock.elapsedTime / 20;
         }
         else{
-            this._tiles.rotation.y += this._clock.delta * 0.05;
+            this._tiles.rotation.y += this._clock.delta * 0.25;
+            this._tiles1.rotation.y -= this._clock.delta * 0.35;
         }
 
 
         // this._parent.position.y = Math.cos(this._clock.elapsedTime) * 0.1;
-        if (this.mixer){
-            this.mixer.update( this._clock.delta );
+        // if (this._clock.elapsedTime < 40) {
+        if (this.mixer) {
+            this.mixer.update(this._clock.delta / 2);
         }
+        // }
+
         // SPHERE
         /*this._mesh.material.uniforms.uIntensity.value = Math.tan(
           this._clock.elapsedTime
@@ -401,12 +528,32 @@ export default class App {
 
         })
 
+        if (this._clock.elapsedTime < 40) {
+            if (this._clock.elapsedTime % 31 > 17) {
+                this._parent.children[2].position.x += this._clock.elapsedTime * 0.01;
+                this._parent.children[2].position.y += this._clock.elapsedTime * 0.001;
+            }
+        }
+        else {
+            if (this._clock.elapsedTime % 31 > 17) {
+                this._parent.children[2].position.x += this._clock.elapsedTime * 0.01;
+                this._parent.children[2].position.y += this._clock.elapsedTime * 0.001;
+            }
+        }
 
 
-        // this._gl.render(this._scene, this._camera);
-        this._composer.render();
+
+        if (this._clock.elapsedTime % 31 < 0.5 ) {
+            this._parent.children[2].position.x = 0;
+            this._parent.children[2].position.y = 0.1;
+        }
+
 
         this._gl.render(this._scene, this._camera);
+        // this._composer.render();
+
+
+
         this._stats.end();
         window.requestAnimationFrame(this._animate.bind(this));
     }

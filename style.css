@@ -8,12 +8,74 @@ body,
   overflow: hidden;
 }
 
-.button {
+#button {
   position: fixed;
-  bottom: 30px;
-  left: 50%;
+  top: 68%;
+  left: 88%;
   transform: translate(-50%, -50%);
-  background: blue;
+  background: #0AD70A;
+  font-size: 20px;
+  font-weight: 400;
   padding: 20px 40px;
-  color: white;
+  color: #000;
+}
+
+#title {
+  position: absolute;
+  top: 40%;
+  left: 40%;
+  font-weight: 700;
+  font-size: 100px;
+  text-align: center;
+  color: #fff;
+}
+#titlegreen {
+  position: absolute;
+  top: 40%;
+  left: 63.5%;
+  font-weight: 700;
+  font-size: 100px;
+  text-align: center;
+  color: #0AD70A;
+}
+
+#discription {
+  position: absolute;
+  top: 55%;
+  left: 70%;
+  font-weight: 200;
+  font-size: 30px;
+  text-align: center;
+  color: #fff;
+}
+
+#Home {
+  position: absolute;
+  top: 3%;
+  left: 25%;
+  font-weight: 300;
+  font-size: 20px;
+  text-align: center;
+  color: #fff;
+  border-bottom: 1px solid #0AD70A;
+}
+#Mentors {
+  position: absolute;
+  top: 3%;
+  left: 45%;
+  font-weight: 300;
+  font-size: 20px;
+  text-align: center;
+  color: #fff;
+  border-bottom: 1px solid #0AD70A;
+}
+#About\ Us {
+  position: absolute;
+  top: 3%;
+  left: 65%;
+  font-weight: 300;
+  font-size: 20px;
+  text-align: center;
+  color: #fff;
+  border-bottom: 1px solid #0AD70A;
 }
